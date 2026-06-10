@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 
-export default function ShelfObject({ data }) {
-  const inner = renderInner(data.type)
+export default function ShelfObject({ data, onOpenModal }) {
+  const inner = renderInner(data.type, data)
   if (!inner) return null
 
   if (data.linkTo) {
@@ -15,18 +15,31 @@ export default function ShelfObject({ data }) {
       </Link>
     )
   }
+
+  if (data.modalItemId && onOpenModal) {
+    return (
+      <div
+        onClick={() => onOpenModal(data.modalItemId, data.modalSection)}
+        style={{ display: 'contents', cursor: 'none' }}
+      >
+        <Hoverable>{inner}</Hoverable>
+      </div>
+    )
+  }
+
   return inner
 }
 
-function renderInner(type) {
+function renderInner(type, data) {
   switch (type) {
-    case 'plant':     return <Plant />
-    case 'globe':     return <Globe />
-    case 'candle':    return <Candle />
-    case 'hourglass': return <Hourglass />
-    case 'knight':    return <ChessKnight />
-    case 'vinyl':     return <VinylRecord />
-    case 'frame':     return <PictureFrame />
+    case 'plant':          return <Plant />
+    case 'globe':          return <Globe />
+    case 'candle':         return <Candle />
+    case 'hourglass':      return <Hourglass />
+    case 'knight':         return <ChessKnight />
+    case 'vinyl':          return <VinylRecord />
+    case 'frame':          return <PictureFrame src={data.src} />
+    case 'steltman-chair': return <SteltmanChair />
     default: return null
   }
 }
@@ -311,7 +324,7 @@ function VinylRecord() {
   )
 }
 
-function PictureFrame() {
+function PictureFrame({ src }) {
   return (
     <div style={{ alignSelf: 'flex-end', width: 80, height: 96, position: 'relative', flexShrink: 0 }}>
       <svg viewBox="0 0 80 96" style={{ width: '100%', height: '100%' }}>
@@ -350,8 +363,12 @@ function PictureFrame() {
         <polygon points="12,86 68,86 80,96 0,96" fill="url(#frameBot)" />
         {/* inner bevel highlight */}
         <polygon points="12,10 68,10 68,86 12,86" fill="none" stroke="rgba(255,190,80,0.08)" strokeWidth="1" />
-        {/* canvas */}
+        {/* canvas / photo */}
         <rect x="12" y="10" width="56" height="76" fill="url(#canvas)" />
+        {src && (
+          <image href={src} x="12" y="10" width="56" height="76"
+            preserveAspectRatio="xMidYMid slice" style={{ opacity: 0.82 }} />
+        )}
         {/* canvas texture strokes */}
         <line x1="12" y1="20" x2="68" y2="18" stroke="rgba(255,255,255,0.015)" strokeWidth="1.5" />
         <line x1="12" y1="35" x2="68" y2="38" stroke="rgba(255,255,255,0.01)" strokeWidth="1" />
@@ -362,6 +379,41 @@ function PictureFrame() {
         <circle cx="74" cy="6"  r="3" fill="#2a1808" stroke="rgba(255,160,40,0.15)" strokeWidth="0.5" />
         <circle cx="6"  cy="90" r="3" fill="#2a1808" stroke="rgba(255,160,40,0.15)" strokeWidth="0.5" />
         <circle cx="74" cy="90" r="3" fill="#2a1808" stroke="rgba(255,160,40,0.15)" strokeWidth="0.5" />
+      </svg>
+    </div>
+  )
+}
+
+function SteltmanChair() {
+  return (
+    <div style={{ alignSelf: 'flex-end', width: 52, height: 86, position: 'relative', flexShrink: 0 }}>
+      <svg viewBox="0 0 52 86" style={{ width: '100%', height: '100%' }}>
+        <defs>
+          <linearGradient id="scWood" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stopColor="#160d06" />
+            <stop offset="35%"  stopColor="#2e1c0a" />
+            <stop offset="65%"  stopColor="#3a2410" />
+            <stop offset="100%" stopColor="#1e1208" />
+          </linearGradient>
+          <linearGradient id="scSeat" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%"   stopColor="#3a2410" />
+            <stop offset="100%" stopColor="#1e1208" />
+          </linearGradient>
+        </defs>
+
+        {/* back-left post — floor to top of backrest */}
+        <rect x="5"  y="2"  width="10" height="82" rx="1.5" fill="url(#scWood)" />
+        {/* back-right post */}
+        <rect x="37" y="2"  width="10" height="82" rx="1.5" fill="url(#scWood)" />
+
+        {/* seat board */}
+        <rect x="5"  y="50" width="42" height="10" rx="1" fill="url(#scSeat)" />
+        {/* seat underside shadow */}
+        <rect x="5"  y="59" width="42" height="4"  rx="0" fill="rgba(0,0,0,0.45)" />
+
+        {/* rim-light highlights on post left edges */}
+        <line x1="6"  y1="3"  x2="6"  y2="83" stroke="rgba(255,190,80,0.07)" strokeWidth="1.5" />
+        <line x1="38" y1="3"  x2="38" y2="83" stroke="rgba(255,190,80,0.07)" strokeWidth="1.5" />
       </svg>
     </div>
   )

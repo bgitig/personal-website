@@ -1,8 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { buildShelves } from './bookData.js'
+import { SECTION_ITEMS } from './data/items.js'
 import Shelf from './components/Shelf.jsx'
 import CandleLight from './components/CandleLight.jsx'
+import Modal from './components/Modal.jsx'
 import SectionPage from './pages/SectionPage.jsx'
 
 const SIDE_PANEL_W = 28
@@ -21,6 +23,13 @@ export default function App() {
 }
 
 function Bookshelf({ shelves }) {
+  const [modalItem, setModalItem] = useState(null)
+
+  const handleOpenModal = (itemId, section) => {
+    const item = (SECTION_ITEMS[section] ?? []).find(i => i.id === itemId) ?? null
+    setModalItem(item)
+  }
+
   return (
     <div style={{
       width: '100vw',
@@ -62,6 +71,7 @@ function Bookshelf({ shelves }) {
             slots={shelf.slots}
             leftWing={shelf.leftWing}
             rightWing={shelf.rightWing}
+            onOpenModal={handleOpenModal}
           />
         ))}
 
@@ -85,7 +95,7 @@ function Bookshelf({ shelves }) {
       <div style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.1)',
+        background: 'rgba(0,0,0,0.01)',
         pointerEvents: 'none',
         zIndex: 49,
       }} />
@@ -95,13 +105,14 @@ function Bookshelf({ shelves }) {
         position: 'fixed',
         inset: 0,
         background: `
-          radial-gradient(ellipse 60% 55% at 50% 50%, transparent 10%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0.97) 100%)
+          radial-gradient(ellipse 60% 55% at 50% 50%, transparent 10%, rgba(0,0,0,0.3) 65%, rgba(0,0,0,0.97) 100%)
         `,
         pointerEvents: 'none',
         zIndex: 50,
       }} />
 
       <CandleLight />
+      <Modal item={modalItem} onClose={() => setModalItem(null)} />
     </div>
   )
 }

@@ -8,78 +8,129 @@ const EARTH_TONES = [
   '#2a1a0a', '#3d1a0a', '#5c2a10', '#6b3b10',
 ]
 
+const DECOR_TYPES = ['plant', 'globe', 'candle', 'hourglass']
+
 const SECTIONS = ['personal', 'creative', 'professional']
 
-export function generateBooks(sectionLabel) {
-  const count = randInt(18, 28)
-  return Array.from({ length: count }, (_, i) => {
-    const h = randInt(130, 210)
-    const w = randInt(16, 34)
-    const color = pick(EARTH_TONES)
-    const spineColor = pick(EARTH_TONES)
-    const tilt = randBetween(-2.5, 2.5)
-    return {
-      id: `${sectionLabel}-book-${i}`,
-      h,
-      w,
-      color,
-      spineColor,
-      tilt,
-      label: null,
-    }
-  })
-}
-
-export function generateWingBooks(sectionLabel, side) {
-  const count = randInt(10, 16)
-  return Array.from({ length: count }, (_, i) => ({
-    id: `${sectionLabel}-${side}-wing-${i}`,
-    h: randInt(100, 190),
-    w: randInt(13, 24),
-    color: pick(EARTH_TONES),
-    tilt: randBetween(-1.5, 1.5),
-  }))
-}
-
-const OBJECT_TYPES = ['plant', 'globe', 'candle', 'hourglass']
-
-export function generateObjects(sectionLabel) {
-  const count = randInt(1, 3)
-  return Array.from({ length: count }, (_, i) => ({
-    id: `${sectionLabel}-obj-${i}`,
-    type: pick(OBJECT_TYPES),
-  }))
-}
-
+// Pinned shelf objects — one per clickable item. Always appear on their shelf.
 const PINNED = {
   personal: [
-    { kind: 'object', data: { id: 'personal-rook',  type: 'knight', linkTo: '/personal?item=rook'  } },
-    { kind: 'object', data: { id: 'personal-vinyl', type: 'vinyl', linkTo: '/personal?item=vinyl' } },
+    {
+      kind: "object",
+      data: {
+        id: "personal-knight",
+        type: "knight",
+        linkTo: "/personal?item=rook",
+      },
+    },
+    {
+      kind: "object",
+      data: {
+        id: "personal-vinyl",
+        type: "vinyl",
+        linkTo: "/personal?item=vinyl",
+      },
+    },
+    {
+      kind: "object",
+      data: {
+        id: "personal-frame",
+        type: "frame",
+        linkTo: "/personal?item=curve-fever",
+        src: "/images/curvefever.png",
+      },
+    },
   ],
   creative: [
-    { kind: 'object', data: { id: 'creative-frame', type: 'frame', linkTo: '/creative?item=frame' } },
+    {
+      kind: "object",
+      data: {
+        id: "creative-frame",
+        type: "frame",
+        linkTo: "/creative?item=frame",
+        src: "/images/treehouse.png",
+      },
+    },
+    {
+      kind: "object",
+      data: {
+        id: "creative-chair",
+        type: "steltman-chair",
+        linkTo: "/creative?item=chair",
+      },
+    },
   ],
-  professional: [],
+  professional: [
+    {
+      kind: "object",
+      data: {
+        id: "professional-frame",
+        type: "frame",
+        linkTo: "/professional?item=frame",
+        src: "/images/resume.png",
+      },
+    },
+  ],
+};
+
+// Each pinned item is spliced at a random position no greater than this index.
+// Worst case: 3 pinned items all inserted at position 12, ending up at slots 12-14.
+// ~12 fillers × 25px avg + 3 objects × 70px avg = ~510px, visible on any screen ≥ 1024px.
+const PINNED_SAFE_WINDOW = 12
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = randInt(0, i)
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
 }
 
 export function buildShelves() {
   return SECTIONS.map((label) => {
-    const books = generateBooks(label)
-    const objects = generateObjects(label)
-    const slots = [
-      ...PINNED[label],
-      ...books.map(b => ({ kind: 'book', data: b })),
-      ...objects.map(o => ({ kind: 'object', data: o })),
-    ]
-    for (let i = slots.length - 1; i > 0; i--) {
-      const j = randInt(0, i)
-      ;[slots[i], slots[j]] = [slots[j], slots[i]]
+    // Build filler: anonymous books + random decorative objects
+    const bookCount  = randInt(18, 26)
+    const decorCount = randInt(1, 3)
+
+    const filler = shuffle([
+      ...Array.from({ length: bookCount }, (_, i) => ({
+        kind: 'book',
+        data: {
+          id:         `${label}-book-${i}`,
+          h:          randInt(130, 210),
+          w:          randInt(16, 34),
+          color:      pick(EARTH_TONES),
+          spineColor: pick(EARTH_TONES),
+          tilt:       randBetween(-2.5, 2.5),
+          label:      null,
+        },
+      })),
+      ...Array.from({ length: decorCount }, (_, i) => ({
+        kind: 'object',
+        data: { id: `${label}-decor-${i}`, type: pick(DECOR_TYPES) },
+      })),
+    ])
+
+    // Splice each pinned item at a random position within the safe window
+    // so it always renders before the center section's overflow edge.
+    for (const p of PINNED[label]) {
+      filler.splice(randInt(0, Math.min(PINNED_SAFE_WINDOW, filler.length)), 0, p)
     }
+
+    // Wing books are purely decorative (no hover, no click)
+    const wingBook = (id) => ({
+      id,
+      h:     randInt(100, 190),
+      w:     randInt(13, 24),
+      color: pick(EARTH_TONES),
+      tilt:  randBetween(-1.5, 1.5),
+    })
+
     return {
       label,
-      slots,
-      leftWing:  generateWingBooks(label, 'left'),
-      rightWing: generateWingBooks(label, 'right'),
+      slots:     filler,
+      leftWing:  Array.from({ length: randInt(10, 16) }, (_, i) => wingBook(`${label}-left-${i}`)),
+      rightWing: Array.from({ length: randInt(10, 16) }, (_, i) => wingBook(`${label}-right-${i}`)),
     }
   })
 }

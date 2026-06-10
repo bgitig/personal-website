@@ -115,22 +115,50 @@ function SpotifyModal({ item, spotify, error, onClose }) {
 /* ── Standard modal ────────────────────────────────────────── */
 
 function StandardModal({ item, onClose }) {
+  const images = item.images ?? (item.image ? [item.image] : [])
+  const [imgIdx,   setImgIdx]   = useState(0)
+  const [lightbox, setLightbox] = useState(false)
+
+  const prevImg = (e) => { e.stopPropagation(); setImgIdx(i => (i - 1 + images.length) % images.length) }
+  const nextImg = (e) => { e.stopPropagation(); setImgIdx(i => (i + 1) % images.length) }
+
   return (
     <Backdrop onClose={onClose}>
       <CloseButton onClose={onClose} />
 
-      {/* image */}
+      {/* image / video */}
       <div style={{
-        width: '100%', aspectRatio: '16/7',
+        width: '100%', aspectRatio: item.video ? '16/9' : '16/7',
         background: '#1a1008',
         borderBottom: '1px solid rgba(180,130,50,0.12)',
+        position: 'relative',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
       }}>
-        {item.image
-          ? <img src={item.image} alt={item.title}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
-          : <Placeholder text="— no image —" />
+        {item.video
+          ? <video
+              src={item.video}
+              poster={item.image || undefined}
+              controls
+              style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#0d0a06' }}
+            />
+          : images.length > 0
+            ? <>
+                <img
+                  src={images[imgIdx]}
+                  alt={item.title}
+                  onClick={() => setLightbox(true)}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9, cursor: 'zoom-in' }}
+                />
+                {images.length > 1 && (
+                  <>
+                    <NavArrow dir="left"  onClick={prevImg} />
+                    <NavArrow dir="right" onClick={nextImg} />
+                    <DotRow count={images.length} active={imgIdx} />
+                  </>
+                )}
+              </>
+            : <Placeholder text="— no image —" />
         }
       </div>
 
@@ -169,6 +197,8 @@ function StandardModal({ item, onClose }) {
 
         <Tags tags={item.tags} />
       </div>
+
+      {lightbox && <Lightbox images={images} startIndex={imgIdx} onClose={() => setLightbox(false)} />}
     </Backdrop>
   )
 }
@@ -298,4 +328,116 @@ function relativeTime(isoString) {
   const hrs = Math.floor(mins / 60)
   if (hrs < 24)  return `${hrs}h ago`
   return `${Math.floor(hrs / 24)}d ago`
+}
+
+/* ── Image nav / lightbox ──────────────────────────────────── */
+
+function NavArrow({ dir, onClick }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        position: 'absolute',
+        top: '50%', transform: 'translateY(-50%)',
+        [dir === 'left' ? 'left' : 'right']: 10,
+        background: hov ? 'rgba(0,0,0,0.72)' : 'rgba(0,0,0,0.38)',
+        border: '1px solid rgba(180,130,50,0.22)',
+        color: hov ? 'rgba(220,175,90,0.95)' : 'rgba(180,140,70,0.6)',
+        fontFamily: 'serif', fontSize: 22,
+        width: 34, height: 34,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', transition: 'all 0.18s',
+        padding: 0, lineHeight: 1,
+      }}
+    >
+      {dir === 'left' ? '‹' : '›'}
+    </button>
+  )
+}
+
+function DotRow({ count, active }) {
+  return (
+    <div style={{
+      position: 'absolute', bottom: 8, left: 0, right: 0,
+      display: 'flex', justifyContent: 'center', gap: 6,
+      pointerEvents: 'none',
+    }}>
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} style={{
+          width: 5, height: 5, borderRadius: '50%',
+          background: i === active ? 'rgba(220,175,90,0.85)' : 'rgba(180,130,50,0.3)',
+          transition: 'background 0.2s',
+        }} />
+      ))}
+    </div>
+  )
+}
+
+function Lightbox({ images, startIndex, onClose }) {
+  const [idx, setIdx] = useState(startIndex)
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape')     onClose()
+      if (e.key === 'ArrowLeft')  setIdx(i => (i - 1 + images.length) % images.length)
+      if (e.key === 'ArrowRight') setIdx(i => (i + 1) % images.length)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [images.length, onClose])
+
+  const prev = (e) => { e.stopPropagation(); setIdx(i => (i - 1 + images.length) % images.length) }
+  const next = (e) => { e.stopPropagation(); setIdx(i => (i + 1) % images.length) }
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 400,
+        background: 'rgba(0,0,0,0.95)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'default',
+      }}
+    >
+      <img
+        src={images[idx]}
+        onClick={e => e.stopPropagation()}
+        style={{ maxWidth: '90vw', maxHeight: '88vh', objectFit: 'contain',
+          boxShadow: '0 0 80px rgba(0,0,0,0.8)' }}
+        alt=""
+      />
+      {images.length > 1 && (
+        <>
+          <button onClick={prev} style={lbBtn('left')}>‹</button>
+          <button onClick={next} style={lbBtn('right')}>›</button>
+          <div style={{ position: 'fixed', bottom: 22, left: 0, right: 0,
+            display: 'flex', justifyContent: 'center', gap: 8, pointerEvents: 'none' }}>
+            {images.map((_, i) => (
+              <div key={i} style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: i === idx ? 'rgba(220,175,90,0.85)' : 'rgba(180,130,50,0.3)',
+              }} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function lbBtn(side) {
+  return {
+    position: 'fixed', top: '50%', transform: 'translateY(-50%)',
+    [side]: 24,
+    background: 'rgba(0,0,0,0.55)',
+    border: '1px solid rgba(180,130,50,0.28)',
+    color: 'rgba(210,168,85,0.85)',
+    fontFamily: 'serif', fontSize: 30,
+    width: 50, height: 50,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer',
+  }
 }
