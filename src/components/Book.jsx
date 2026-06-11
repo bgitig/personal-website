@@ -1,14 +1,15 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 export default function Book({ data }) {
   const [hovered, setHovered] = useState(false)
 
-  const { h, w, color, spineColor, tilt } = data
+  const { h, w, color, spineColor, tilt, label, linkTo } = data
 
   const shadowInset = `inset -4px 0 8px rgba(0,0,0,0.5), inset 4px 0 4px rgba(255,255,255,0.03)`
   const mottleGrad = `linear-gradient(160deg, ${lighten(color, 18)} 0%, ${color} 40%, ${darken(color, 20)} 70%, ${darken(color, 8)} 100%)`
 
-  return (
+  const inner = (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -21,7 +22,7 @@ export default function Book({ data }) {
         transition: 'transform 0.25s cubic-bezier(0.22,0.61,0.36,1)',
         cursor: 'none',
         alignSelf: 'flex-end',
-        filter: hovered ? 'brightness(1.25)' : 'brightness(1)',
+        filter: hovered ? 'brightness(1.3)' : 'brightness(1)',
       }}
     >
       {/* Spine face */}
@@ -70,8 +71,43 @@ export default function Book({ data }) {
         height: 1,
         background: `rgba(0,0,0,0.35)`,
       }} />
+      {/* Spine title */}
+      {label && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          pointerEvents: 'none',
+        }}>
+          <span style={{
+            writingMode: 'vertical-rl',
+            transform: 'rotate(180deg)',
+            fontSize: 7,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            color: 'rgba(230,200,140,0.68)',
+            fontFamily: '"Palatino Linotype", Palatino, serif',
+            userSelect: 'none',
+            whiteSpace: 'nowrap',
+          }}>
+            {label}
+          </span>
+        </div>
+      )}
     </div>
   )
+
+  if (linkTo) {
+    return (
+      <Link to={linkTo} style={{ display: 'contents', textDecoration: 'none', cursor: 'none' }}>
+        {inner}
+      </Link>
+    )
+  }
+  return inner
 }
 
 function lighten(hex, amount) {

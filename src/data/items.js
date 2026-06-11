@@ -51,7 +51,7 @@ export const SECTION_ITEMS = {
       video: "/images/treehouse.mp4",
       date: "May, 2026",
       details:
-        "An eco-brutalist inspired treehouse I drew for my VISA0100 final. I edited progress photos together into a short video.",
+        "An eco-brutalist inspired treehouse I drew for my VISA0100 final. I normalized progress photos' lighting, contrast, and position, and stitched them together into a short video.",
       tags: ["art", "drawing"],
     },
     {

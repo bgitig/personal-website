@@ -239,14 +239,20 @@ function ChessKnight() {
             M 14 78
             C 11 68, 10 58, 12 48
             C 12 40, 15 32, 19 24
-            C 21 18, 23 12, 24 8
-            L 21 4
-            C 24 0, 28 0, 29 5
-            C 31 0, 35 0, 37 4
-            C 40 9,  42 18, 42 26
-            C 46 32, 52 41, 55 50
-            C 57 56, 55 63, 50 67
-            C 46 71, 40 72, 36 75
+            C 21 18, 23 13, 25 11
+            L 21 5
+            L 17 0
+            L 26 7
+            L 32 7
+            L 28 1
+            L 37 10
+            C 40 15, 42 21, 43 27
+            C 47 33, 53 43, 56 52
+            L 58 55
+            L 57 62
+            L 52 68
+            L 46 71
+            L 37 74
             C 33 77, 30 78, 28 78
             Z
           "
@@ -268,11 +274,11 @@ function ChessKnight() {
         <ellipse cx="35" cy="30" rx="2" ry="1.5" fill="#080504" opacity="0.9" />
 
         {/* nostril mark */}
-        <ellipse cx="51" cy="58" rx="2" ry="1.5" fill="#0a0706" opacity="0.6" transform="rotate(-20,51,58)" />
+        <ellipse cx="55" cy="60" rx="2" ry="1.5" fill="#0a0706" opacity="0.6" transform="rotate(-20,55,60)" />
 
         {/* shadow under jaw */}
         <path
-          d="M 36 75 C 40 72, 46 70, 50 66"
+          d="M 37 74 L 46 71 L 52 67"
           fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="2" strokeLinecap="round"
         />
       </svg>

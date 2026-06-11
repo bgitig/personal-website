@@ -111,6 +111,7 @@ export default function Shelf({ label, slots, leftWing, rightWing, onOpenModal }
                   position: 'relative', zIndex: 2,
                   alignSelf: 'flex-end', flexShrink: 0,
                   display: 'flex', alignItems: 'flex-end',
+                  paddingRight: slot.data.type === 'frame' ? 4 : 0,
                 }}>
                   <ShelfObject data={slot.data} onOpenModal={onOpenModal} />
                 </div>

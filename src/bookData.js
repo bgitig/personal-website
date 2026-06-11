@@ -66,17 +66,38 @@ const PINNED = {
       data: {
         id: "professional-frame",
         type: "frame",
-        linkTo: "/professional?item=frame",
+        linkTo: "/professional?item=resume",
         src: "/images/resume.png",
+      },
+    },
+    {
+      kind: 'book',
+      data: {
+        id:         'professional-bfm',
+        h:          180,
+        w:          32,
+        color:      pick(EARTH_TONES),
+        spineColor: pick(EARTH_TONES),
+        tilt:       randBetween(-1.5, 1.5),
+        label:      'Brown Film Magazine',
+        linkTo:     '/professional?item=BFM',
+      },
+    },
+    {
+      kind: 'book',
+      data: {
+        id:         'professional-urban-journal',
+        h:          170,
+        w:          32,
+        color:      pick(EARTH_TONES),
+        spineColor: pick(EARTH_TONES),
+        tilt:       randBetween(-1.5, 1.5),
+        label:      'Urban Journal',
+        linkTo:     '/professional?item=UJ',
       },
     },
   ],
 };
-
-// Each pinned item is spliced at a random position no greater than this index.
-// Worst case: 3 pinned items all inserted at position 12, ending up at slots 12-14.
-// ~12 fillers × 25px avg + 3 objects × 70px avg = ~510px, visible on any screen ≥ 1024px.
-const PINNED_SAFE_WINDOW = 12
 
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -88,7 +109,6 @@ function shuffle(arr) {
 
 export function buildShelves() {
   return SECTIONS.map((label) => {
-    // Build filler: anonymous books + random decorative objects
     const bookCount  = randInt(18, 26)
     const decorCount = randInt(1, 3)
 
@@ -111,13 +131,20 @@ export function buildShelves() {
       })),
     ])
 
-    // Splice each pinned item at a random position within the safe window
-    // so it always renders before the center section's overflow edge.
-    for (const p of PINNED[label]) {
-      filler.splice(randInt(0, Math.min(PINNED_SAFE_WINDOW, filler.length)), 0, p)
+    // Each pinned item gets 0–3 random filler items before it, then the pinned
+    // item itself. This bounds the total pixel offset before the last pinned item
+    // to ~9 books × 35px avg = ~315px — always visible in the center section.
+    // Pinned items are shuffled so their order varies each load.
+    const pinnedShuffled = shuffle([...PINNED[label]])
+    let fi = 0
+    const slots = []
+    for (const p of pinnedShuffled) {
+      const gap = randInt(0, 3)
+      for (let g = 0; g < gap && fi < filler.length; g++) slots.push(filler[fi++])
+      slots.push(p)
     }
+    while (fi < filler.length) slots.push(filler[fi++])
 
-    // Wing books are purely decorative (no hover, no click)
     const wingBook = (id) => ({
       id,
       h:     randInt(100, 190),
@@ -128,7 +155,7 @@ export function buildShelves() {
 
     return {
       label,
-      slots:     filler,
+      slots,
       leftWing:  Array.from({ length: randInt(10, 16) }, (_, i) => wingBook(`${label}-left-${i}`)),
       rightWing: Array.from({ length: randInt(10, 16) }, (_, i) => wingBook(`${label}-right-${i}`)),
     }
